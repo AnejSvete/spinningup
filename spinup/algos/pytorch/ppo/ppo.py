@@ -7,6 +7,7 @@ import spinup.algos.pytorch.ppo.core as core
 from spinup.utils.logx import EpochLogger
 from spinup.utils.mpi_pytorch import setup_pytorch_for_mpi, sync_params, mpi_avg_grads
 from spinup.utils.mpi_tools import mpi_fork, mpi_avg, proc_id, mpi_statistics_scalar, num_procs
+from termcolor import colored
 
 
 import sys, os
@@ -219,6 +220,9 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
 
     eval_env = gym.make(env.name, mode='eval')
 
+    env.seed(seed)
+    eval_env.seed(seed)
+
     algorithm_logger = AlgorithmLogger(
         max_no_of_episodes=epochs * eval_episodes,
         max_time_steps_per_episode=eval_env.max_episode_steps,
@@ -351,26 +355,6 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         # Perform PPO update!
         update()
 
-        o, r, d, ep_ret, ep_len, n = env.reset(), 0, False, 0, 0, 0
-        n_successful = 0
-        while n < eval_episodes:
-            if render_eval:
-                env.render()
-
-            a, _, _ = ac.step(torch.as_tensor(o, dtype=torch.float32))
-            o, r, d, i = env.step(a)
-            ep_ret += r
-            ep_len += 1
-            algorithm_logger.account_state_action(10 if a == 1 else -10, o)
-
-            if d or (ep_len == max_ep_len):
-                print('Episode %d \t EpRet %.3f \t EpLen %d'%(n, ep_ret, ep_len))
-                algorithm_logger.account_whole_episode(
-                    ep_len, ep_ret, i['success'])
-                n_successful += i['success']
-                o, r, d, ep_ret, ep_len = env.reset(), 0, False, 0, 0
-                n += 1
-
         # Log info about epoch
         logger.log_tabular('Epoch', epoch)
         logger.log_tabular('EpRet', with_min_and_max=True)
@@ -387,6 +371,27 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         logger.log_tabular('StopIter', average_only=True)
         logger.log_tabular('Time', time.time()-start_time)
         logger.dump_tabular()
+
+        o_eval, r_eval, d_eval, ep_ret_eval, ep_len_eval, n_eval = eval_env.reset(), 0, False, 0, 0, 0
+        n_successful = 0
+        while n_eval < eval_episodes:
+            if render_eval:
+                eval_env.render()
+
+            a_eval, _, _ = ac.step(torch.as_tensor(o_eval, dtype=torch.float32))
+            o_eval, r_eval, d_eval, i_eval = eval_env.step(a_eval)
+            ep_ret_eval += r_eval
+            ep_len_eval += 1
+            algorithm_logger.account_state_action(10 if a_eval == 1 else -10, o_eval)
+
+            if d_eval or (ep_len_eval == max_ep_len):
+                color = 'green' if i_eval['success'] else 'red'
+                print(colored('Episode %d \t EpRet %.3f \t EpLen %d'%(n_eval + 1, ep_ret_eval, ep_len_eval), color))
+                algorithm_logger.account_whole_episode(
+                    ep_len_eval, ep_ret_eval, i_eval['success'])
+                n_successful += i_eval['success']
+                o_eval, r_eval, d_eval, ep_ret_eval, ep_len_eval = eval_env.reset(), 0, False, 0, 0
+                n_eval += 1
 
         if n_successful >= required_quality * eval_episodes:
             print('The found policy is good enough. stopping.')
