@@ -9,7 +9,8 @@ from spinup import EpochLogger
 from spinup.utils.logx import restore_tf_graph
 
 
-def load_policy_and_env(fpath, env_name, itr='last', deterministic=False):
+def load_policy_and_env(fpath, env_name, use_keyboard, itr='last', 
+                        deterministic=False):
     """
     Load a policy from save, whether it's TF or PyTorch, along with RL env.
 
@@ -64,7 +65,7 @@ def load_policy_and_env(fpath, env_name, itr='last', deterministic=False):
         env = None
     """
 
-    env = gym.make(env_name, mode='eval')
+    env = gym.make(env_name, mode='eval', use_keyboard=use_keyboard)
     
     return env, get_action
 
@@ -147,6 +148,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('fpath', type=str)
     parser.add_argument('--env', type=str)
+    parser.add_argument('--keyboard', action='store_false')
     parser.add_argument('--len', '-l', type=int, default=0)
     parser.add_argument('--episodes', '-n', type=int, default=100)
     parser.add_argument('--norender', '-nr', action='store_true')
@@ -154,7 +156,8 @@ if __name__ == '__main__':
     parser.add_argument('--deterministic', '-d', action='store_true')
     args = parser.parse_args()
     env, get_action = load_policy_and_env(args.fpath,
-                                          args.env, 
+                                          args.env,
+                                          args.keyboard,
                                           args.itr if args.itr >=0 else 'last',
                                           args.deterministic)
     run_policy(env, get_action, args.len, args.episodes, not(args.norender))
