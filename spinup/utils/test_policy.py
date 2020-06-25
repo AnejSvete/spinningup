@@ -4,11 +4,12 @@ import os
 import os.path as osp
 import tensorflow as tf
 import torch
+import gym
 from spinup import EpochLogger
 from spinup.utils.logx import restore_tf_graph
 
 
-def load_policy_and_env(fpath, itr='last', deterministic=False):
+def load_policy_and_env(fpath, env_name, itr='last', deterministic=False):
     """
     Load a policy from save, whether it's TF or PyTorch, along with RL env.
 
@@ -53,6 +54,7 @@ def load_policy_and_env(fpath, itr='last', deterministic=False):
     else:
         get_action = load_pytorch_policy(fpath, itr, deterministic)
 
+    """
     # try to load environment from save
     # (sometimes this will fail because the environment could not be pickled)
     try:
@@ -60,7 +62,10 @@ def load_policy_and_env(fpath, itr='last', deterministic=False):
         env = state['env']
     except:
         env = None
+    """
 
+    env = gym.make(env_name, mode='eval')
+    
     return env, get_action
 
 
@@ -141,13 +146,15 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('fpath', type=str)
+    parser.add_argument('--env', type=str)
     parser.add_argument('--len', '-l', type=int, default=0)
     parser.add_argument('--episodes', '-n', type=int, default=100)
     parser.add_argument('--norender', '-nr', action='store_true')
     parser.add_argument('--itr', '-i', type=int, default=-1)
     parser.add_argument('--deterministic', '-d', action='store_true')
     args = parser.parse_args()
-    env, get_action = load_policy_and_env(args.fpath, 
+    env, get_action = load_policy_and_env(args.fpath,
+                                          args.env, 
                                           args.itr if args.itr >=0 else 'last',
                                           args.deterministic)
     run_policy(env, get_action, args.len, args.episodes, not(args.norender))
