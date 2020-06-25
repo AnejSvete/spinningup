@@ -148,7 +148,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('fpath', type=str)
     parser.add_argument('--env', type=str)
-    parser.add_argument('--keyboard', action='store_false')
+    parser.add_argument('--keyboard', action='store_true')
     parser.add_argument('--len', '-l', type=int, default=0)
     parser.add_argument('--episodes', '-n', type=int, default=100)
     parser.add_argument('--norender', '-nr', action='store_true')

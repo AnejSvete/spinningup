@@ -31,11 +31,16 @@ def plot_data(data, xaxis='Epoch', value="AverageEpRet", condition="Condition1",
         data = pd.concat(data, ignore_index=True)
     sns.set(style="darkgrid", font_scale=1.5)
     sns.lineplot(data=data, x=xaxis, y=value, hue=condition, ci='sd', **kwargs)
-    
+       
+    # print(data.describe(include='all'))
+    # print(data.info())
+    # print(data['Condition1'])
+    # print(data['Condition2'])
+
     # plt.legend(loc='best').set_draggable(True)
     
-    #plt.legend(loc='upper center', ncol=3, handlelength=1,
-    #           borderaxespad=0., prop={'size': 13})
+    plt.legend(loc='upper center', ncol=2, handlelength=1,
+              borderaxespad=-10.0, prop={'size': 7})
 
     """
     For the version of the legend used in the Spinning Up benchmarking page, 
@@ -72,6 +77,9 @@ def get_datasets(logdir, condition=None):
                     exp_name = config['exp_name']
             except:
                 print('No file named config.json')
+
+            exp_name = '_'.join(exp_name.split('_')[:-1])
+
             condition1 = condition or exp_name or 'exp'
             condition2 = condition1 + '-' + str(exp_idx)
             exp_idx += 1
@@ -119,6 +127,8 @@ def get_all_datasets(all_logdirs, legend=None, select=None, exclude=None):
     Makes it easier to look at graphs from particular ablations, if you
     launch many jobs at once with similar names.
     """
+    # print(f'Select = {select}')
+    # print(f'Logdirs = {logdirs}')
     if select is not None:
         logdirs = [log for log in logdirs if all(x in log for x in select)]
     if exclude is not None:
