@@ -313,6 +313,8 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
     start_time = time.time()
     o, ep_ret, ep_len = env.reset(), 0, 0
 
+    first_success = True
+
     # Main loop: collect experience in env and update/log each epoch
     for epoch in range(epochs):
         for t in range(local_steps_per_epoch):
@@ -389,12 +391,18 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
                 print(colored('Episode %d \t EpRet %.3f \t EpLen %d'%(n_eval + 1, ep_ret_eval, ep_len_eval), color))
                 algorithm_logger.account_whole_episode(
                     ep_len_eval, ep_ret_eval, i_eval['success'])
+
+                if i_eval['success'] and first_success:
+                    first_success = False
+                    print(f'The first success came after {epoch + 1} epochs!')
+
                 n_successful += i_eval['success']
                 o_eval, r_eval, d_eval, ep_ret_eval, ep_len_eval = eval_env.reset(), 0, False, 0, 0
                 n_eval += 1
 
         if n_successful >= required_quality * eval_episodes:
             print('The found policy is good enough. stopping.')
+            print(f'It took us {epoch + 1} epochs!')
             break
 
     algorithm_logger.print_statistics()
