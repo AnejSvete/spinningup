@@ -392,6 +392,10 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
                 algorithm_logger.account_whole_episode(
                     ep_len_eval, ep_ret_eval, i_eval['success'])
 
+                if not i_eval['success']:
+                  print('Failed. Giving up.')
+                  break
+
                 if i_eval['success'] and first_success:
                     first_success = False
                     print(f'The first success came after {epoch + 1} epochs!')
