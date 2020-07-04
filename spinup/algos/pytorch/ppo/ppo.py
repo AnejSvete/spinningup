@@ -392,7 +392,7 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
                 algorithm_logger.account_whole_episode(
                     ep_len_eval, ep_ret_eval, i_eval['success'])
 
-                if not i_eval['success']:
+                if required_quality == 1.0 and not i_eval['success']:
                   print('Failed. Giving up.')
                   break
 
@@ -407,6 +407,7 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         if n_successful >= required_quality * eval_episodes:
             print('The found policy is good enough. stopping.')
             print(f'It took us {epoch + 1} epochs!')
+            logger.save_state({'env': env}, None)
             break
 
     algorithm_logger.print_statistics()
