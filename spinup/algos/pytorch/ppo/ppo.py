@@ -226,6 +226,7 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
     algorithm_logger = AlgorithmLogger(
         max_no_of_episodes=epochs * eval_episodes,
         max_time_steps_per_episode=eval_env.max_episode_steps,
+        observation_size=7 if eval_env.name == 'CartPole-v3' else 4,
         goal=eval_env.goal_position)
 
     # Create actor-critic module
@@ -391,11 +392,7 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
                 print(colored('Episode %d \t EpRet %.3f \t EpLen %d'%(n_eval + 1, ep_ret_eval, ep_len_eval), color))
                 algorithm_logger.account_whole_episode(
                     ep_len_eval, ep_ret_eval, i_eval['success'])
-
-                if required_quality == 1.0 and not i_eval['success']:
-                  print('Failed. Giving up.')
-                  break
-
+                  
                 if i_eval['success'] and first_success:
                     first_success = False
                     print(f'The first success came after {epoch + 1} epochs!')
@@ -403,6 +400,12 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
                 n_successful += i_eval['success']
                 o_eval, r_eval, d_eval, ep_ret_eval, ep_len_eval = eval_env.reset(), 0, False, 0, 0
                 n_eval += 1
+
+                success_ratio = n_successful / n_eval
+                best_case = (eval_episodes - n_eval) / eval_episodes
+                if success_ratio + best_case < required_quality:
+                    print('Failed. Giving up.')
+                    break
 
         if n_successful >= required_quality * eval_episodes:
             print('The found policy is good enough. stopping.')
