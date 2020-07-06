@@ -315,6 +315,7 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
     o, ep_ret, ep_len = env.reset(), 0, 0
 
     first_success = True
+    first_stable_policy = True
 
     # Main loop: collect experience in env and update/log each epoch
     for epoch in range(epochs):
@@ -352,7 +353,8 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
 
 
         # Save model
-        if (epoch % save_freq == 0) or (epoch == epochs-1):
+        if ((epoch % save_freq == 0) or (epoch == epochs-1)) and \
+            first_stable_policy:
             logger.save_state({'env': env}, None)
 
         # Perform PPO update!
@@ -407,16 +409,18 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
                     print('Failed. Giving up.')
                     break
 
-        if n_successful >= required_quality * eval_episodes:
-            print('The found policy is good enough. stopping.')
+        if n_successful >= required_quality * eval_episodes and \
+            first_stable_policy:
+            first_stable_policy = False
+            print('The found policy is good enough.')
             print(f'It took us {epoch + 1} epochs!')
             logger.save_state({'env': env}, None)
             break
 
-    algorithm_logger.print_statistics()
+    # algorithm_logger.print_statistics()
 
-    for what in PlottingConstants.WHOLE_RUN_STATISTICS:
-        algorithm_logger.plot_summary(what)
+    # for what in PlottingConstants.WHOLE_RUN_STATISTICS:
+    #     algorithm_logger.plot_summary(what)
 
 
 if __name__ == '__main__':
