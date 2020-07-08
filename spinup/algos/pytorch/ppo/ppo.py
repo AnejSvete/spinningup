@@ -403,7 +403,7 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
                 o_eval, r_eval, d_eval, ep_ret_eval, ep_len_eval = eval_env.reset(), 0, False, 0, 0
                 n_eval += 1
 
-                success_ratio = n_successful / n_eval
+                success_ratio = n_successful / eval_episodes
                 best_case = (eval_episodes - n_eval) / eval_episodes
                 if success_ratio + best_case < required_quality:
                     print('Failed. Giving up.')
