@@ -113,7 +113,8 @@ def load_pytorch_policy(fpath, itr, deterministic=False):
     return get_action
 
 
-def run_policy(env, get_action, max_ep_len=None, num_episodes=100, render=True):
+def run_policy(env, get_action, max_ep_len=None, num_episodes=100, render=True,
+               algorithm_logger=None):
 
     assert env is not None, \
         "Environment not found!\n\n It looks like the environment wasn't saved, " + \
@@ -128,13 +129,19 @@ def run_policy(env, get_action, max_ep_len=None, num_episodes=100, render=True):
             time.sleep(1e-3)
 
         a = get_action(o)
-        o, r, d, _ = env.step(a)
+        o, r, d, i = env.step(a)
         ep_ret += r
         ep_len += 1
+
+        if algorithm_logger is not None:
+            algorithm_logger.account_state_action(10 if a == 1 else -10, o)
 
         if d or (ep_len == max_ep_len):
             logger.store(EpRet=ep_ret, EpLen=ep_len)
             print('Episode %d \t EpRet %.3f \t EpLen %d'%(n, ep_ret, ep_len))
+            if algorithm_logger is not None:
+                algorithm_logger.account_whole_episode(
+                        ep_len, ep_ret, i['success'])
             o, r, d, ep_ret, ep_len = env.reset(), 0, False, 0, 0
             n += 1
 

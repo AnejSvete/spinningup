@@ -30,8 +30,11 @@ def plot_data(data, xaxis='Epoch', value="AverageEpRet", condition="Condition1",
     if isinstance(data, list):
         data = pd.concat(data, ignore_index=True)
     sns.set(style="darkgrid", font_scale=1.5)
-    sns.lineplot(data=data, x=xaxis, y=value, hue=condition, ci='sd', **kwargs)
-       
+    
+    ax = sns.lineplot(data=data, x=xaxis, y=value, hue=condition, ci='sd', **kwargs)
+    ax.set(xlabel='Število interakcij z okoljem', ylabel='Nagrada')
+    ax.get_legend().remove()
+    
     # print(data.describe(include='all'))
     # print(data.info())
     # print(data['Condition1'])
@@ -39,8 +42,8 @@ def plot_data(data, xaxis='Epoch', value="AverageEpRet", condition="Condition1",
 
     # plt.legend(loc='best').set_draggable(True)
     
-    plt.legend(loc='upper center', ncol=2, handlelength=1,
-              borderaxespad=-10.0, prop={'size': 7})
+    # plt.legend(loc='upper center', ncol=2, handlelength=1,
+    #           borderaxespad=-10.0, prop={'size': 7})
 
     """
     For the version of the legend used in the Spinning Up benchmarking page, 
@@ -80,7 +83,8 @@ def get_datasets(logdir, condition=None):
 
             exp_name = '_'.join(exp_name.split('_')[:-1])
 
-            condition1 = condition or exp_name or 'exp'
+            # condition1 = condition or exp_name or 'exp'
+            condition1 = 'c'
             condition2 = condition1 + '-' + str(exp_idx)
             exp_idx += 1
             if condition1 not in units:
