@@ -113,13 +113,17 @@ def load_pytorch_policy(fpath, itr, deterministic=False):
     return get_action
 
 
-def run_policy(env, get_action, max_ep_len=None, num_episodes=100, render=True,
+def run_policy(_env, get_action, max_ep_len=None, num_episodes=100, render=True,
                algorithm_logger=None):
 
-    assert env is not None, \
+    assert _env is not None, \
         "Environment not found!\n\n It looks like the environment wasn't saved, " + \
         "and we can't run the agent in it. :( \n\n Check out the readthedocs " + \
         "page on Experiment Outputs for how to handle this situation."
+
+    env = gym.wrappers.Monitor(
+        _env, '/home/anej/Downloads/dipl/cartpole_obstacle_videos_3', 
+        video_callable=lambda ep_id: True, force=True)
 
     logger = EpochLogger()
     o, r, d, ep_ret, ep_len, n = env.reset(), 0, False, 0, 0, 0
@@ -142,12 +146,19 @@ def run_policy(env, get_action, max_ep_len=None, num_episodes=100, render=True,
             if algorithm_logger is not None:
                 algorithm_logger.account_whole_episode(
                         ep_len, ep_ret, i['success'])
+            
+            if i['success']:
+                print(env.base_path)
+
             o, r, d, ep_ret, ep_len = env.reset(), 0, False, 0, 0
             n += 1
 
     logger.log_tabular('EpRet', with_min_and_max=True)
     logger.log_tabular('EpLen', average_only=True)
     logger.dump_tabular()
+
+    _env.close()
+    env.close()
 
 
 if __name__ == '__main__':

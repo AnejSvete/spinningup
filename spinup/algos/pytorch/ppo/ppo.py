@@ -213,7 +213,11 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
     obs_dim = env.observation_space.shape
     act_dim = env.action_space.shape
 
-    eval_env = gym.make(env.name, mode='eval')
+    _eval_env = gym.make(env.name, mode='eval')
+    eval_env = gym.wrappers.Monitor(
+        _eval_env, '/home/anej/Downloads/dipl/cartpole_obstacle_videos', 
+        video_callable=lambda ep_id: True, force=True)
+    # eval_env = _eval_env
 
     env.seed(seed)
     eval_env.seed(seed)
@@ -393,6 +397,8 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
                 if i_eval['success'] and first_success:
                     first_success = False
                     print(f'The first success came after {epoch + 1} epochs!')
+                if i_eval['success']:
+                    print(eval_env.base_path)
 
                 n_successful += i_eval['success']
                 o_eval, r_eval, d_eval, ep_ret_eval, ep_len_eval = eval_env.reset(), 0, False, 0, 0
